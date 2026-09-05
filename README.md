@@ -1,3 +1,5 @@
+> **Hostinger Web Premium:** use a branch `hostinger` ou o ZIP estático. Não selecione Node.js. Veja [HOSTINGER_PREMIUM.md](HOSTINGER_PREMIUM.md).
+
 # Norium — site institucional
 
 Site independente em React + Vite, com GSAP ScrollTrigger, destinado à Hostinger.
