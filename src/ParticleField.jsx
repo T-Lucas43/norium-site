@@ -51,7 +51,7 @@ export default function ParticleField(){
     const draw=now=>{
       raf=requestAnimationFrame(draw);
       if(!ready||!visible||document.hidden||now-last<32||(reduced.matches&&!dirty))return;
-      last=now;dirty=false;if(!reduced.matches)time+=.0038;
+      last=now;dirty=false;time=reduced.matches?0:(Date.now()-startedAt)/1000;
       const hero=canvas.parentElement;
       const scroll=reduced.matches?0:Math.max(0,Math.min(1,-hero.getBoundingClientRect().top/Math.max(hero.offsetHeight*.78,1)));
       const formation=reduced.matches?1:smooth(Math.max(0,Math.min(1,(Date.now()-startedAt-180)/2350)));
@@ -61,8 +61,9 @@ export default function ParticleField(){
       ctx.clearRect(0,0,w,h);ctx.globalCompositeOperation='lighter';
       for(let i=0;i<count;i++){
         const p=particles[i],pulse=Math.sin(time*2+p.phase),spin=p.phase+time*1.4+morph*2.8;
-        const aliveX=Math.cos(p.phase+time*1.15)*p.depth*2.8;
-        const aliveY=Math.sin(p.phase+time*.92)*p.depth*2.8;
+        const flow=Math.sin(time*1.35+p.tx*18+p.ty*9),orbit=3.2+p.depth*4.4;
+        const aliveX=Math.cos(p.phase+time*(.65+p.depth*.18))*orbit+flow*2.2;
+        const aliveY=Math.sin(p.phase+time*(.58+p.depth*.16))*orbit+Math.cos(time*1.1+p.ty*20)*2.2;
         const logoX=w*.5+p.tx*compact+aliveX,logoY=h*.49+p.ty*compact+aliveY;
         const scatteredX=w*.5+p.sx*cloudX+Math.cos(p.phase+time*.7)*24;
         const scatteredY=h*.49+p.sy*cloudY+Math.sin(p.phase+time*.6)*28;
@@ -85,6 +86,7 @@ export default function ParticleField(){
       }
       ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
       canvas.dataset.formation=formation.toFixed(3);canvas.dataset.scroll=scroll.toFixed(3);
+      canvas.dataset.motion=reduced.matches?'reduced':`flowing-${(time%10).toFixed(2)}`;
       canvas.dataset.shape=formation<.3?'scattered':formation<.98?'forming':scroll<.18?'norium-n':'morphing';
     };
 
