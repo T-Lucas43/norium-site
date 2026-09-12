@@ -1,6 +1,6 @@
 # Publicar no Hostinger Web Premium
 
-Este site roda como HTML, CSS, JavaScript, imagens e vídeo. React é executado no navegador; Node.js é usado somente para gerar os arquivos antes do upload. Não selecione “Aplicativo Node.js”.
+Este site roda como HTML, CSS, JavaScript, imagens e animação canvas. React é executado no navegador; Node.js é usado somente para gerar os arquivos antes do upload. Não selecione “Aplicativo Node.js”.
 
 ## Opção 1 — ZIP pronto
 
@@ -8,7 +8,7 @@ Este site roda como HTML, CSS, JavaScript, imagens e vídeo. React é executado 
 2. Abra o Gerenciador de arquivos e entre em `public_html` do domínio.
 3. Faça backup de qualquer site existente antes de substituir arquivos.
 4. Envie `norium-hostinger-premium.zip` e extraia dentro de `public_html`.
-5. `index.html`, `.htaccess`, `assets`, `images`, `media` e as pastas de páginas devem ficar diretamente em `public_html`, sem uma pasta `dist` intermediária.
+5. `index.html`, `.htaccess`, `assets`, `images` e as pastas de páginas devem ficar diretamente em `public_html`, sem uma pasta `dist` intermediária.
 6. Abra o domínio e teste `/plataforma/`, `/solucoes/`, `/nora/`, `/planos/` e `/telas/`.
 
 ## Opção 2 — GitHub
@@ -28,4 +28,4 @@ Na sua máquina: `npm ci`, depois `npm run build`. O diretório `dist` é a entr
 
 Para atualizar a branch de hospedagem: `npm run publish:hostinger`. Exige Git autenticado e não usa force push.
 
-Cada página tem seu próprio `index.html`, além do fallback Apache no `.htaccess`. O sistema Norium continua na Azure; os botões de acesso mantêm o endereço fornecido.
+Cada página tem seu próprio `index.html`, além do fallback Apache no `.htaccess`. O sistema Norium continua na Azure; os botões de acesso usam o endereço ativo da aplicação. O vídeo antigo permanece no código-fonte, mas não é incluído na publicação.

@@ -1,5 +1,5 @@
-export const APP_URL='https://norium-xb7456ymrz6d6.blacksky-cd0b62be.eastus2.azurecontainerapps.io/';
-export const navigation=[['/plataforma','Plataforma'],['/solucoes','Soluções'],['/nora','Conheça a Nora'],['/planos','Planos'],['/telas','Telas']];
+export const APP_URL='https://norium-b7bum6defpciy.blueglacier-50a47e6c.eastus2.azurecontainerapps.io/';
+export const navigation=[['/#a-ideia','A ideia'],['/plataforma','Plataforma'],['/solucoes','Soluções'],['/nora','Conheça a Nora'],['/planos','Planos'],['/telas','Telas']];
 export const modules=[
 {id:'visao-geral',name:'Visão geral',label:'UM NOVO PONTO DE PARTIDA',title:'Seu dia inteiro. Uma visão mais clara.',description:'Encontre os próximos compromissos, acompanhe tarefas e veja a atividade dos seus canais em um painel conectado.',image:'dashboard',features:['Visão das atividades recentes','Agenda e tarefas no mesmo painel','Atalhos para os seus canais']},
 {id:'tarefas',name:'Tarefas & projetos',label:'DA IDEIA À ENTREGA',title:'Projetos que saem do papel.',description:'Organize o trabalho em quadros Kanban. Defina responsáveis, prioridades e prazos para acompanhar cada entrega.',image:'tarefas',features:['Quadros organizados por projeto','Responsáveis, prioridades e prazos','Comentários e arquivos nas tarefas']},
