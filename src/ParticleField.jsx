@@ -12,7 +12,8 @@ export default function ParticleField(){
     if(!ctx)return;
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
     const logo=new Image(),particles=[];
-    let w=0,h=0,raf=0,last=0,time=0,ready=false,visible=true,dirty=true,mouseX=.5,mouseY=.5;
+    let w=0,h=0,raf=0,last=0,time=0,startedAt=0,ready=false,visible=true,dirty=true;
+    const pointer={x:0,y:0,active:false};
 
     const buildLogo=()=>{
       const size=520,buffer=document.createElement('canvas');
@@ -33,7 +34,7 @@ export default function ParticleField(){
           color:`rgb(${point[2]} ${point[3]} ${point[4]})`
         });
       }
-      ready=true;dirty=true;
+      startedAt=Date.now();ready=true;dirty=true;
     };
 
     const resize=()=>{
@@ -43,38 +44,58 @@ export default function ParticleField(){
     };
     const move=event=>{
       const rect=canvas.getBoundingClientRect();
-      mouseX=(event.clientX-rect.left)/Math.max(rect.width,1);
-      mouseY=(event.clientY-rect.top)/Math.max(rect.height,1);
+      pointer.x=event.clientX-rect.left;pointer.y=event.clientY-rect.top;pointer.active=true;
+      canvas.dataset.pointer='active';dirty=true;
     };
+    const leave=()=>{pointer.active=false;canvas.dataset.pointer='idle';dirty=true};
     const draw=now=>{
       raf=requestAnimationFrame(draw);
       if(!ready||!visible||document.hidden||now-last<32||(reduced.matches&&!dirty))return;
       last=now;dirty=false;if(!reduced.matches)time+=.0038;
       const hero=canvas.parentElement;
       const scroll=reduced.matches?0:Math.max(0,Math.min(1,-hero.getBoundingClientRect().top/Math.max(hero.offsetHeight*.78,1)));
+      const formation=reduced.matches?1:smooth(Math.max(0,Math.min(1,(Date.now()-startedAt-180)/2350)));
       const morph=smooth(scroll),compact=Math.min(w*(w<650?.92:.72),h*(w<650?.52:.82));
       const cloudX=w*(w<650?.64:.6),cloudY=h*(w<650?.54:.52),count=w<650?2800:COUNT;
+      const repelRadius=w<650?92:150,repelForce=w<650?30:48;
       ctx.clearRect(0,0,w,h);ctx.globalCompositeOperation='lighter';
       for(let i=0;i<count;i++){
         const p=particles[i],pulse=Math.sin(time*2+p.phase),spin=p.phase+time*1.4+morph*2.8;
-        const logoX=w*.5+p.tx*compact,logoY=h*.49+p.ty*compact;
+        const aliveX=Math.cos(p.phase+time*1.15)*p.depth*2.8;
+        const aliveY=Math.sin(p.phase+time*.92)*p.depth*2.8;
+        const logoX=w*.5+p.tx*compact+aliveX,logoY=h*.49+p.ty*compact+aliveY;
+        const scatteredX=w*.5+p.sx*cloudX+Math.cos(p.phase+time*.7)*24;
+        const scatteredY=h*.49+p.sy*cloudY+Math.sin(p.phase+time*.6)*28;
+        const assembledX=scatteredX+(logoX-scatteredX)*formation;
+        const assembledY=scatteredY+(logoY-scatteredY)*formation;
         const vortexX=w*.5+p.sx*cloudX*(.22+morph*.95)+Math.cos(spin)*28*morph;
         const vortexY=h*.49+p.sy*cloudY*(.16+morph*.88)+Math.sin(spin)*35*morph-scroll*80;
-        const x=logoX*(1-morph)+vortexX*morph+Math.cos(p.phase+time)*p.depth*2.3+(mouseX-.5)*18*p.depth*(1-morph);
-        const y=logoY*(1-morph)+vortexY*morph+Math.sin(p.phase+time*.8)*p.depth*2.3+(mouseY-.5)*12*p.depth*(1-morph);
-        ctx.globalAlpha=(.2+p.depth*.62)*(1-morph*.42);
+        let x=assembledX*(1-morph)+vortexX*morph;
+        let y=assembledY*(1-morph)+vortexY*morph;
+        if(pointer.active){
+          const dx=x-pointer.x,dy=y-pointer.y,distance=Math.hypot(dx,dy);
+          if(distance<repelRadius){
+            const strength=(1-distance/repelRadius)**2*repelForce;
+            const safeDistance=Math.max(distance,.01);
+            x+=dx/safeDistance*strength;y+=dy/safeDistance*strength;
+          }
+        }
+        ctx.globalAlpha=(.2+p.depth*.62)*(1-morph*.42)*(.58+formation*.42);
         ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(x,y,p.depth*.72+.28+pulse*.12,0,Math.PI*2);ctx.fill();
       }
       ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
-      canvas.dataset.scroll=scroll.toFixed(3);canvas.dataset.shape=scroll<.18?'norium-n':'morphing';
+      canvas.dataset.formation=formation.toFixed(3);canvas.dataset.scroll=scroll.toFixed(3);
+      canvas.dataset.shape=formation<.3?'scattered':formation<.98?'forming':scroll<.18?'norium-n':'morphing';
     };
 
     logo.onload=buildLogo;logo.src='/images/symbol.png';
     const observer=new ResizeObserver(resize);observer.observe(canvas);
     const intersection=new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;dirty=true});intersection.observe(canvas);
     const motionChange=()=>{dirty=true};reduced.addEventListener('change',motionChange);
-    canvas.parentElement.addEventListener('pointermove',move);resize();raf=requestAnimationFrame(draw);
-    return()=>{cancelAnimationFrame(raf);observer.disconnect();intersection.disconnect();reduced.removeEventListener('change',motionChange);canvas.parentElement.removeEventListener('pointermove',move)};
+    const hero=canvas.parentElement;
+    hero.addEventListener('pointermove',move);hero.addEventListener('pointerleave',leave);canvas.dataset.pointer='idle';
+    resize();raf=requestAnimationFrame(draw);
+    return()=>{cancelAnimationFrame(raf);observer.disconnect();intersection.disconnect();reduced.removeEventListener('change',motionChange);hero.removeEventListener('pointermove',move);hero.removeEventListener('pointerleave',leave)};
   },[]);
   return <canvas ref={ref} className="particle-field" aria-hidden="true"/>;
 }
