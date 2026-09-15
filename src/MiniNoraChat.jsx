@@ -33,7 +33,7 @@ export default function MiniNoraChat({compact=false}){
       const response=await fetch(endpoint(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:clean,history}),signal:controller.signal});
       const data=await response.json().catch(()=>({}));
       if(!response.ok)throw new Error(data.detail||'Não consegui responder agora.');
-      setMessages(current=>[...current,{role:'assistant',content:data.response||'Não consegui responder agora.'}]);
+      setMessages(current=>[...current,{role:'assistant',content:data.response||'Não consegui responder agora.',restricted:Boolean(data.restricted)}]);
     }catch(reason){
       setError(reason?.name==='AbortError'?'A resposta demorou mais que o esperado. Tente novamente.':reason.message||'Não consegui responder agora.');
     }finally{clearTimeout(timeout);setBusy(false)}
@@ -48,9 +48,9 @@ export default function MiniNoraChat({compact=false}){
       </article>)}
       {busy&&<article className="mini-nora-message is-assistant is-thinking"><span className="mini-nora-message-avatar"><img src="/images/nora-symbol.webp" alt=""/></span><div><b>Nora</b><p><i/><i/><i/><span hidden>Nora está respondendo</span></p></div></article>}
     </div>
-    {messages.length===1&&<div className="mini-nora-suggestions">{SUGGESTIONS.map(item=><button type="button" onClick={()=>ask(item)} key={item}>{item}</button>)}</div>}
+    {(messages.length===1||messages[messages.length-1]?.restricted)&&<div className="mini-nora-suggestions">{SUGGESTIONS.map(item=><button type="button" onClick={()=>ask(item)} key={item}>{item}</button>)}</div>}
     {error&&<p className="mini-nora-error" role="alert">{error}</p>}
     <form className="mini-nora-composer" onSubmit={event=>{event.preventDefault();ask(input)}}><label><textarea aria-label="Pergunte sobre o Norium" rows="1" maxLength="600" value={input} onChange={event=>setInput(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();ask(input)}}} placeholder="Pergunte sobre o Norium..." disabled={busy}/><button type="submit" aria-label="Enviar pergunta" disabled={busy||!input.trim()}>{busy?<LoaderCircle className="spin" size={18}/>:<Send size={18}/>}</button></label></form>
-    <footer><span>Este chat responde somente sobre o Norium.</span><a href={APP_URL}>Abrir a Nora completa <ArrowUpRight size={13}/></a></footer>
+    <footer><span>Foco exclusivo em dúvidas sobre o Norium.</span><a href={APP_URL}>Abrir a Nora completa <ArrowUpRight size={13}/></a></footer>
   </section>
 }
