@@ -6,6 +6,27 @@ import './mini-nora-chat.css';
 const INITIAL_MESSAGE={role:'assistant',content:'Olá! Eu sou a Nora. Posso explicar como o Norium organiza tarefas, comunicação, documentos e o trabalho da sua equipe.'};
 const SUGGESTIONS=['O que é o Norium?','Que problema ele resolve?','Como a Nora pode ajudar?'];
 const localHosts=new Set(['localhost','127.0.0.1']);
+const SCOPE_FEEDBACK='Este mini chat foi criado para explicar o Norium com respostas objetivas e confiáveis. Por isso, mantenho o foco na plataforma e não respondo assuntos externos. Posso ajudar com tarefas e projetos, equipe, documentos, integrações, planos ou explicar como a Nora funciona.';
+const LOCAL_RESPONSES={
+  'oi':'Olá! Posso explicar o que é o Norium, quais problemas ele resolve e como seus recursos ajudam profissionais e equipes. O que você gostaria de conhecer?',
+  'ola':'Olá! Posso explicar o que é o Norium, quais problemas ele resolve e como seus recursos ajudam profissionais e equipes. O que você gostaria de conhecer?',
+  'o que e o norium':'O Norium é um workspace que reúne organização, comunicação, documentos e inteligência artificial. Ele reduz o tempo perdido entre ferramentas e mantém tarefas, decisões e informações no mesmo contexto, para profissionais e equipes trabalharem com mais clareza.',
+  'que problema ele resolve':'O Norium resolve a fragmentação do trabalho: tarefas em um lugar, conversas em outro e documentos difíceis de localizar. Ao reunir esses elementos em um workspace, ele reduz retrabalho, perda de contexto e dúvidas sobre prioridades e responsabilidades.',
+  'qual problema ele resolve':'O Norium resolve a fragmentação do trabalho: tarefas em um lugar, conversas em outro e documentos difíceis de localizar. Ao reunir esses elementos em um workspace, ele reduz retrabalho, perda de contexto e dúvidas sobre prioridades e responsabilidades.',
+  'como a nora pode ajudar':'A Nora é a assistente de IA do Norium. Ela ajuda a organizar ideias, resumir conteúdos, esclarecer recursos e estruturar próximos passos. Neste mini chat, ela explica a plataforma; dentro da conta, suas capacidades dependem do plano, das integrações e das permissões.'
+};
+
+function normalized(value){return value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[?!.,]+$/g,'').trim()}
+function localResponse(question){return LOCAL_RESPONSES[normalized(question)]||''}
+function conciseResponse(value){
+  const clean=String(value||'').replace(/\*\*/g,'').replace(/^[-•]\s*/gm,'').replace(/\s+/g,' ').trim();
+  const words=clean.split(/\s+/);
+  if(words.length<=85)return clean;
+  const sentences=clean.match(/[^.!?]+[.!?]+/g)||[];
+  let result='';
+  for(const sentence of sentences){if(`${result} ${sentence}`.trim().split(/\s+/).length>85)break;result=`${result} ${sentence}`.trim()}
+  return result||`${words.slice(0,85).join(' ')}…`;
+}
 
 function endpoint(){
   return localHosts.has(window.location.hostname)
@@ -25,6 +46,8 @@ export default function MiniNoraChat({compact=false}){
   async function ask(question){
     const clean=question.trim();
     if(!clean||busy)return;
+    const immediate=localResponse(clean);
+    if(immediate){setMessages(current=>[...current,{role:'user',content:clean},{role:'assistant',content:immediate}]);setInput('');setError('');return}
     const history=messages.slice(-6).map(({role,content})=>({role,content}));
     setMessages(current=>[...current,{role:'user',content:clean}]);setInput('');setBusy(true);setError('');
     const controller=new AbortController();
@@ -33,7 +56,8 @@ export default function MiniNoraChat({compact=false}){
       const response=await fetch(endpoint(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:clean,history}),signal:controller.signal});
       const data=await response.json().catch(()=>({}));
       if(!response.ok)throw new Error(data.detail||'Não consegui responder agora.');
-      setMessages(current=>[...current,{role:'assistant',content:data.response||'Não consegui responder agora.',restricted:Boolean(data.restricted)}]);
+      const restricted=Boolean(data.restricted);
+      setMessages(current=>[...current,{role:'assistant',content:restricted?SCOPE_FEEDBACK:conciseResponse(data.response||'Não consegui responder agora.'),restricted}]);
     }catch(reason){
       setError(reason?.name==='AbortError'?'A resposta demorou mais que o esperado. Tente novamente.':reason.message||'Não consegui responder agora.');
     }finally{clearTimeout(timeout);setBusy(false)}
