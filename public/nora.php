@@ -47,5 +47,11 @@ if ($failed || $status < 100) {
     exit;
 }
 
+if ($status === 404) {
+    http_response_code(503);
+    echo json_encode(['detail' => 'O mini chat da Nora está temporariamente indisponível enquanto o sistema é atualizado.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 http_response_code($status);
 echo $response;
