@@ -1,3 +1,9 @@
+<p align="center"><img src=".github/assets/banner.svg" alt="Norium · Site" width="100%" /></p>
+
+<p align="center"><a href="https://github.com/T-Lucas43">Perfil</a> · <a href="https://github.com/T-Lucas43?tab=repositories">Mais projetos</a> · <a href="https://www.linkedin.com/in/tarcisio-lucas-io">LinkedIn</a></p>
+
+---
+
 > **Hostinger Web Premium:** use a branch `hostinger` ou o ZIP estático. Não selecione Node.js. Veja [HOSTINGER_PREMIUM.md](HOSTINGER_PREMIUM.md).
 
 # Norium — site institucional
